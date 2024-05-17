@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "jsx": "preserve",
+    "lib": [
+      "ESNext"
+    ],
+    "baseUrl": ".",
+    "rootDir": ".",
+    "module": "ES6",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "strict": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "declaration": true,
+    "declarationDir": "dist",
+    "esModuleInterop": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "*.ts",
+    "packages"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.md",
+    "**/dist"
+  ]
+}
