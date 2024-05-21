@@ -28,8 +28,11 @@ export function treeToFlat<
   fieldNames = {},
   hasChildren = false,
   cloneDeep = true,
+  hasTreeAttrs = true,
 }: TreeOptions = {}): R[] {
   const _fieldNames = genFieldNames(fieldNames)
+  const { id, name, parentId, parentIds, parent, depth, path, isLeaf, children: childrenKey } = _fieldNames
+
   // 这里必须使用展开运算符，否则会改变原数组结构
   const stack = cloneDeep
     ? [..._.cloneDeep(tree).reverse()]
@@ -39,8 +42,6 @@ export function treeToFlat<
     // 底部 node 出栈，深度遍历
     const lastNode: T | undefined = stack.pop()
     if (lastNode) {
-      const { id, name, parentId, parentIds, parent, depth, path, isLeaf, children: childrenKey } = _fieldNames
-
       if (!_.has(lastNode, id))
         _.set(lastNode, id, _.uniqueId())
 
@@ -68,13 +69,16 @@ export function treeToFlat<
 
       if (children.length) {
         // children 记录好 parentId parentIds
-        children.forEach((item) => {
-          _.set(item as object, parentId, lastNodeId)
-          _.set(item as object, parentIds, lastNodeParentIds.concat(lastNodeId))
-          _.set(item as object, parent, _.omit(lastNode, childrenKey))
-          _.set(item as object, depth, _.get(lastNode, depth) + 1)
-          _.set(item as object, path, `${_.get(lastNode, path)}/${_.get(item, name)}`)
-        })
+        if (hasTreeAttrs) {
+          children.forEach((item) => {
+            _.set(item as object, parentId, lastNodeId)
+            _.set(item as object, parentIds, lastNodeParentIds.concat(lastNodeId))
+            _.set(item as object, parent, _.omit(lastNode, childrenKey))
+            _.set(item as object, depth, _.get(lastNode, depth) + 1)
+            _.set(item as object, path, `${_.get(lastNode, path)}/${_.get(item, name)}`)
+          })
+        }
+
         const _children = cloneDeep
           ? _.cloneDeep(children).reverse()
           : [...children].reverse()
