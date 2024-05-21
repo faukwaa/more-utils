@@ -1,9 +1,16 @@
 {
   "name": "more-utils-tree",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Collection of essential JS Tree Utilities",
   "author": "faukwaa <https://github.com/faukwaa>",
   "license": "MIT",
+  "homepage": "https://github.com/faukwaa/more-utils#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/faukwaa/more-utils.git",
+    "directory": "packages/tree"
+  },
+  "bugs": { "url": "https://github.com/faukwaa/more-utils/issues" },
   "keywords": [
     "Javascript",
     "Tree",
@@ -12,7 +19,9 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.cts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "publish": "npm publish --access public"
   }
