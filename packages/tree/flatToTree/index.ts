@@ -3,7 +3,6 @@ import * as _ from 'lodash-es'
 import type { TreeNode, TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 import { treeToFlat } from '../treeToFlat'
-import { genTreeAttrs } from '../genTreeAttrs'
 
 /**
  * 扁平数据转为树形数据
