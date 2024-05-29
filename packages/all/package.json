@@ -1,0 +1,36 @@
+{
+  "name": "more-utils-all",
+  "version": "1.0.0",
+  "description": "Collection Of Essential JS Utilities",
+  "author": "faukwaa <https://github.com/faukwaa>",
+  "license": "MIT",
+  "homepage": "https://github.com/faukwaa/more-utils#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/faukwaa/more-utils.git",
+    "directory": "packages/tree"
+  },
+  "bugs": { "url": "https://github.com/faukwaa/more-utils/issues" },
+  "keywords": [
+    "Javascript",
+    "tree",
+    "utils"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.cts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./*": "./*"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "publish": "npm publish --access public"
+  }
+}
