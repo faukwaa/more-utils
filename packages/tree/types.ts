@@ -1,5 +1,3 @@
-export type RecordKey = string | number | symbol
-
 export interface TreeOptions {
   fieldNames?: {
     id?: string
