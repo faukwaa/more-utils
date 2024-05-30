@@ -1,5 +1,13 @@
 ## 📦 Install
 
+### ALL Utils
+
+```bash
+npm i more-utils-all
+```
+
+### Tree
+
 ```bash
 npm i more-utils-tree
 ```
@@ -109,3 +117,15 @@ const flat = treeToFlat(tree)
 ### replaceTree
 
 ### genTreeAttrs
+
+### Color
+
+```bash
+npm i more-utils-color
+```
+
+### Format
+
+```bash
+npm i more-utils-format
+```
