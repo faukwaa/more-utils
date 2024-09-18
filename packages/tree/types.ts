@@ -29,6 +29,11 @@ export interface TreeOptions {
    * 用于汇总树形数据的字段
    */
   summaryFields?: string[]
+  /**
+   * 用于 flatToTree，是否扁平化
+   * 默认为 false
+   */
+  flat?: boolean
 }
 
 export type TreeNode<T = object> = {
