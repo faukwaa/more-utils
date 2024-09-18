@@ -1,7 +1,5 @@
 /* eslint-disable jsdoc/check-param-names */
-import { flatToTree } from '../flatToTree'
-import { treeToFlat } from '../treeToFlat'
-import type { TreeNode, TreeOptions } from '../types'
+import type { TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
 /**
@@ -16,24 +14,46 @@ import { genFieldNames } from '../utils'
  * @param param1.pathKey 节点路径的 key，默认为 'path'
  * @param param1.nameKey 节点名称的 key，默认为 'name'
  * @param param1.idKey 节点 id 的 key，默认为 'id'
- * @returns 生成后的树形数据
  */
-export function genTreeAttrs<
-  T,
-  R = TreeNode<T>,
->(tree: T[], {
-  fieldNames = {},
-}: TreeOptions = {}): R[] {
+export function genTreeAttrs<T extends Record<string, any>>(
+  tree: T[],
+  { fieldNames = {} }: Pick<TreeOptions, 'fieldNames'> = {},
+): void {
   const _fieldNames = genFieldNames(fieldNames)
-  const { id, parentId, children } = _fieldNames
-  const flatNodes = treeToFlat(tree, {
-    fieldNames: _fieldNames,
-  })
-  return flatToTree(flatNodes, {
-    fieldNames: {
-      id,
-      parentId,
-      children,
-    },
-  }) as R[]
+  const { id, name, children, parent: parentKey, parentIds: parentIdsKey, depth: depthKey, path: pathKey, isLeaf: isLeafKey } = _fieldNames
+
+  // 栈用于深度优先遍历，初始时根节点入栈
+  const stack: { node: any, parent: T | null, parentIds: any[], depth: number, path: string }[] = tree.map(node => ({
+    node,
+    parent: null,
+    parentIds: [],
+    depth: 0,
+    path: `/${node[name]}`,
+  }))
+
+  // 迭代遍历
+  while (stack.length > 0) {
+    const { node, parent, parentIds, depth, path } = stack.pop()!
+
+    // 设置当前节点的属性
+    node[parentKey] = parent ? { ...parent, children: undefined } : null // 父节点引用，去除 children 属性
+    node[parentIdsKey] = parentIds // 父节点 ID 列表
+    node[depthKey] = depth // 深度
+    node[pathKey] = path // 路径
+    node[isLeafKey] = !node[children] || node[children].length === 0 // 是否叶子节点
+
+    // 如果有子节点，将子节点推入栈，同时更新路径、深度等信息
+    if (node[children] && node[children].length > 0) {
+      for (let i = node[children].length - 1; i >= 0; i--) {
+        const child = node[children][i]
+        stack.push({
+          node: child,
+          parent: { ...node, children: undefined }, // 创建 parent 的浅拷贝，并去掉 children
+          parentIds: [...parentIds, node[id]], // 更新 parentIds
+          depth: depth + 1, // 子节点深度增加
+          path: `${path}/${child[name]}`, // 更新路径
+        })
+      }
+    }
+  }
 }

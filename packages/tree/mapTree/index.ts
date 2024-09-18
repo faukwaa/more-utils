@@ -1,8 +1,6 @@
 /* eslint-disable jsdoc/check-param-names */
-import * as _ from 'lodash-es'
-import { flatToTree } from '../flatToTree'
-import { treeToFlat } from '../treeToFlat'
-import type { TreeCallBack, TreeFlatNode, TreeNode, TreeOptions } from '../types'
+import { cloneDeep } from 'lodash-es'
+import type { TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
 /**
@@ -24,32 +22,47 @@ import { genFieldNames } from '../utils'
  * @param param2.hasEmptyChildren 是否为每个节点添加一个空的 children 字段，默认为 false
  * @returns 遍历后的树形数据
  */
-export function mapTree<
-  T extends Record<string, any>,
-  R = TreeNode<T>,
->(tree: T[], callback: TreeCallBack<TreeFlatNode<T>, R>, {
-  fieldNames = {},
-  hasEmptyChildren = false,
-}: TreeOptions = {}): R[] {
+export function mapTree<T extends Record<string, any>, R = any>(
+  tree: T[],
+  callback: (node: T) => R,
+  { fieldNames = {}, deep = true }: Pick<TreeOptions, 'fieldNames' | 'deep'> = {},
+): R[] {
   const _fieldNames = genFieldNames(fieldNames)
-  const { id, parentId, parentIds } = _fieldNames
-  const flatNodes = treeToFlat(tree, {
-    fieldNames,
-  })
+  const { children } = _fieldNames
+  const clonedTreeData = deep ? cloneDeep(tree) : [...tree]
 
-  const mapNodes = flatNodes.map((item) => {
-    const newItem = callback(item) as TreeNode<T>
-    const itemId = _.get(item, id)
-    const itemParentId = _.get(item, parentId)
-    const itemParentIds = _.get(item, parentIds)
-    _.set(newItem, id, itemId)
-    _.set(newItem, parentId, itemParentId)
-    _.set(newItem, parentIds, itemParentIds)
-    return newItem
-  })
+  // 使用栈来进行迭代遍历，这里使用 reverse() 来确保根节点按顺序入栈
+  const stack: { node: T, parent: R | null }[] = clonedTreeData
+    .slice() // 使用 slice 创建 tree 的浅拷贝，避免修改原数组
+    .reverse() // 反转根节点顺序
+    .map((node: any) => ({ node, parent: null }))
 
-  return flatToTree(mapNodes, {
-    fieldNames,
-    hasEmptyChildren,
-  }) as R[]
+  const newTree: R[] = []
+
+  while (stack.length > 0) {
+    const { node, parent } = stack.pop()!
+    const newNode = callback(node)
+
+    // 将新节点添加到父节点的子节点数组中
+    if (parent)
+      (parent as any)[children].push(newNode)
+    else
+      newTree.push(newNode) // 根节点放入新树中
+
+    // 如果当前节点有子节点，继续处理子节点
+    const nodeChildren = node[children]
+    if (nodeChildren && nodeChildren.length > 0) {
+      (newNode as any)[children] = []
+
+      // 子节点入栈时反转顺序，确保从左到右处理
+      stack.push(
+        ...nodeChildren
+          .slice() // 创建子节点的浅拷贝
+          .reverse() // 反转子节点顺序
+          .map((childNode: any) => ({ node: childNode, parent: newNode })),
+      )
+    }
+  }
+
+  return newTree
 }

@@ -1,23 +1,10 @@
+import { executeWithProgressBar, generateTreeData } from '../utils'
 import { treeToFlat } from '.'
 
-const tree = [
-  {
-    id: 1,
-    name: '1',
-    children: [
-      {
-        id: 2,
-        name: '2',
-        children: [
-          {
-            id: 3,
-            name: '3',
-          },
-        ],
-      },
-    ],
-  },
-]
-
-// eslint-disable-next-line no-console
-console.log(JSON.stringify(treeToFlat(tree)))
+const tree = generateTreeData(3, 2)
+executeWithProgressBar(() => new Promise<void>((resolve) => {
+  const flat = treeToFlat(tree as any)
+  // eslint-disable-next-line no-console
+  console.log(JSON.stringify(tree, null, 2), JSON.stringify(flat, null, 2))
+  resolve()
+}))

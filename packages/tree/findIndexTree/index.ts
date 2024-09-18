@@ -1,6 +1,5 @@
 /* eslint-disable jsdoc/check-param-names */
-import { treeToFlat } from '../treeToFlat'
-import type { TreeCallBack, TreeFlatNode, TreeOptions } from '../types'
+import type { TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
 /**
@@ -20,14 +19,29 @@ import { genFieldNames } from '../utils'
  * @param param3.fieldNames.isLeaf 是否为叶子节点字段名，默认为 'isLeaf'
  * @returns node 的 index
  */
-export function findIndexTree<
-  T,
->(tree: T[], callback: TreeCallBack<TreeFlatNode<T>>, {
-  fieldNames = {},
-}: TreeOptions = {}): number {
+export function findIndexTree<T extends Record<string, any>>(
+  tree: T[],
+  callback: (node: T) => boolean,
+  { fieldNames = {} }: Pick<TreeOptions, 'fieldNames'> = {},
+): number[] | null {
   const _fieldNames = genFieldNames(fieldNames)
-  const flatNodes = treeToFlat(tree, {
-    fieldNames: _fieldNames,
-  })
-  return flatNodes.findIndex(item => callback(item))
+  const { children } = _fieldNames
+
+  const stack: { node: T, path: number[] }[] = tree.map((node, index) => ({ node, path: [index] }))
+
+  while (stack.length > 0) {
+    const { node, path } = stack.pop()!
+
+    // 检查当前节点是否符合条件
+    if (callback(node))
+      return path
+
+    // 如果有子节点，将子节点压入栈，并记录路径
+    if (node[children] && node[children].length > 0) {
+      for (let i = 0; i < node[children].length; i++)
+        stack.push({ node: node[children][i], path: path.concat(i) })
+    }
+  }
+
+  return null // 未找到符合条件的节点
 }

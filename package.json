@@ -17,7 +17,19 @@
     "build:all": "PACKAGE=all pnpm run build",
     "build:tree": "PACKAGE=tree pnpm run build",
     "build:color": "PACKAGE=color pnpm run build",
-    "build:format": "PACKAGE=color pnpm run build"
+    "build:format": "PACKAGE=color pnpm run build",
+    "t2f": "tsx ./packages/tree/treeToFlat/example.ts",
+    "f2t": "tsx ./packages/tree/flatToTree/example.ts",
+    "st": "tsx ./packages/tree/summaryTree/example.ts",
+    "ft": "tsx ./packages/tree/filterTree/example.ts",
+    "et": "tsx ./packages/tree/eachTree/example.ts",
+    "fit": "tsx ./packages/tree/findIndexTree/example.ts",
+    "findt": "tsx ./packages/tree/findTree/example.ts",
+    "gta": "tsx ./packages/tree/genTreeAttrs/example.ts",
+    "mt": "tsx ./packages/tree/mapTree/example.ts",
+    "p2t": "tsx ./packages/tree/pathToTree/example.ts",
+    "rt": "tsx ./packages/tree/replaceTree/example.ts",
+    "ct": "tsx ./packages/tree/countTree/example.ts"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.18.0",

@@ -1,8 +1,6 @@
 /* eslint-disable jsdoc/check-param-names */
 import * as _ from 'lodash-es'
-import { flatToTree } from '../flatToTree'
-import { treeToFlat } from '../treeToFlat'
-import type { TreeCallBack, TreeFlatNode, TreeNode, TreeOptions } from '../types'
+import type { TreeNode, TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
 /**
@@ -23,42 +21,58 @@ import { genFieldNames } from '../utils'
  * @param param3.fieldNames.isLeaf 是否为叶子节点字段名，默认为 'isLeaf'
  * @returns 替换后的树形数据
  */
-export function replaceTree<
-  T,
-  R = TreeNode<T>,
->(tree: T[], newNode: TreeNode<T>, callback: TreeCallBack<TreeFlatNode<T>>, {
-  fieldNames = {},
-}: TreeOptions = {}): T[] | R[] {
+export function replaceTree<T extends Record<string, any>, R = TreeNode<T>>(
+  tree: T[],
+  newNode: T,
+  callback: (node: T) => boolean,
+  { fieldNames = {} }: Pick<TreeOptions, 'fieldNames'> = {},
+): T[] | R[] {
   const _fieldNames = genFieldNames(fieldNames)
-  const { id, parentId, parentIds, children } = _fieldNames
-  const flatNodes = treeToFlat(tree, {
-    fieldNames,
-  })
+  const { id, children } = _fieldNames
+  const stack: T[] = [...tree] // 使用栈来迭代处理树结构
+  const resultTree: T[] = [...tree] // 保持原树结构
 
-  const node = flatNodes.find(item => callback(item))
+  while (stack.length > 0) {
+    const currentNode = stack.pop() as T
 
-  if (node) {
-    // 找出符合 callback 的一整条线上的子节点，去除掉
-    const withoutOldNodeChildren = flatNodes.filter(item =>
-      !_.get(item, parentIds)?.includes(_.get(node, id)))
+    // 如果 callback 返回 true，替换该节点
+    if (callback(currentNode)) {
+      const parent = findParentNode(resultTree, currentNode, { fieldNames })
+      if (parent) {
+        const index = parent[children].findIndex((node: T) => node[id] === currentNode[id])
+        parent[children][index] = {
+          ...newNode,
+          [children]: currentNode[children] || [], // 保留原有的子节点（如有）
+        }
+      }
+    }
 
-    const withNewNode = withoutOldNodeChildren.map((item) => {
-      if (callback(item))
-        return newNode
-
-      return item
-    })
-    const newFlatNodes = treeToFlat(withNewNode, {
-      fieldNames,
-    })
-    return flatToTree(newFlatNodes, {
-      fieldNames: {
-        id,
-        parentId,
-        children,
-      },
-    }) as R[]
+    // 如果存在子节点，将子节点加入栈
+    if (currentNode[children] && currentNode[children].length > 0)
+      stack.push(...currentNode[children])
   }
 
-  return tree as unknown as R[]
+  return resultTree
+}
+
+// 辅助函数：查找父节点
+function findParentNode<T extends Record<string, any>>(
+  tree: T[],
+  targetNode: T,
+  { fieldNames = {} }: TreeOptions = {},
+): T | null {
+  const { id = 'id', children = 'children' } = fieldNames
+  const stack: T[] = [...tree]
+
+  while (stack.length > 0) {
+    const node = stack.pop() as T
+
+    if (node[children] && node[children].some((child: T) => child[id] === targetNode[id]))
+      return node // 找到父节点
+
+    if (node[children] && node[children].length > 0)
+      stack.push(...node[children])
+  }
+
+  return null
 }

@@ -1,8 +1,6 @@
 /* eslint-disable jsdoc/check-param-names */
-import * as _ from 'lodash-es'
-import { flatToTree } from '../flatToTree'
-import { treeToFlat } from '../treeToFlat'
-import type { TreeCallBack, TreeFlatNode, TreeNode, TreeOptions } from '../types'
+import { cloneDeep } from 'lodash-es'
+import type { TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
 /**
@@ -21,62 +19,40 @@ import { genFieldNames } from '../utils'
  * @param param2.fieldNames.path 路径字段名，默认为 'path'
  * @param param2.fieldNames.isLeaf 是否为叶子节点字段名，默认为 'isLeaf'
  * @param param2.flat 是否扁平化，默认为 false
- * @param param2.hasEmptyChildren 是否为每个节点添加一个空的 children 字段，默认为 false
+ * @param param2.hasChildren 是否为命中的节点保留 children 字段，默认为 false
  * @returns 过滤后的树形数据
  */
-export function filterTree<
-  T,
-  R = TreeNode<T> | TreeFlatNode<T>,
->(tree: T[], callback: TreeCallBack<TreeFlatNode<T>>, {
-  fieldNames = {},
-  flat = false,
-  hasEmptyChildren = false,
-  basedOnChildren = true,
-}: TreeOptions = {}): R[] {
+export function filterTree<T extends Record<string, any>>(
+  tree: T[],
+  callback: (node: T) => boolean,
+  { fieldNames = {}, deep = true, basedOnChildren = true, hasChildren = false }:
+  Pick<TreeOptions, 'fieldNames' | 'deep' | 'basedOnChildren' | 'hasChildren'> = {},
+): T[] {
   const _fieldNames = genFieldNames(fieldNames)
-  const { id, parentId, parentIds, children } = _fieldNames
+  const { children: childrenKey } = _fieldNames
+  const result: T[] = []
+  const clonedTree = deep ? cloneDeep(tree) : [...tree]
+  const stack = clonedTree.map(node => ({ node, parent: null as T | null }))
 
-  // 先扁平化
-  const flatNodes = treeToFlat<T>(tree, { fieldNames })
-  // 查出所有符合条件的节点，包括父节点
-  let needNodes = flatNodes.filter(item => callback(item))
-  const needNodeIds = needNodes.map(item => _.get(item, id) as string | number)
-  const notNeedNodeIds = flatNodes.filter(item => !callback(item)).map(item => _.get(item, id) as string | number)
+  while (stack.length > 0) {
+    const { node, parent } = stack.pop()!
+    const currentNode: T = { ...node, children: [] } as T
+    let children = node[childrenKey] || []
+    if (!hasChildren)
+      children = []
 
-  const needNodesPids: (string | number)[] = []
-
-  needNodes.forEach((item) => {
-    if (_.has(item, parentIds)) {
-    // 不基于子节点的话，需要把所有父节点不符合条件的过滤掉
-    // 基于子节点的话，只需要把所有父节点的 id 记录下来，就算父节点里面有不符合条件的也要
-      if (!basedOnChildren) {
-        const itemParentIds = _.get(item, parentIds) as (string | number)[]
-        // 看看所有父级 id 和不需要的 id 有没有交集
-        const intersection = _.intersection(itemParentIds, notNeedNodeIds)
-        // 如果有交集，就把当前节点 id 从 needNodeIds 中去掉，并且父节点也不需要了
-        if (intersection.length)
-          needNodeIds.splice(needNodeIds.findIndex(id => _.get(item, id) === id), 1)
-        else
-          needNodesPids.push(..._.get(item, parentIds) as (string | number)[])
-      }
-      else {
-        needNodesPids.push(..._.get(item, parentIds) as (string | number)[])
-      }
+    const isValid = callback(node)
+    if (basedOnChildren) {
+      if (children.length > 0 || isValid)
+        parent ? parent[childrenKey].push(currentNode) : result.push(currentNode)
     }
-  })
-  // 把所有 id 合并，去重
-  const allNeedNodeIds = _.uniq(needNodeIds.concat(needNodesPids))
-  needNodes = flatNodes.filter(item => allNeedNodeIds.includes(_.get(item, id)))
+    else {
+      if (isValid)
+        parent ? parent[childrenKey].push(currentNode) : result.push(currentNode)
+    }
+    for (const child of children)
+      stack.push({ node: child, parent: currentNode })
+  }
 
-  if (flat)
-    return needNodes as R[]
-
-  return flatToTree(needNodes, {
-    fieldNames: {
-      id,
-      parentId,
-      children,
-    },
-    hasEmptyChildren,
-  }) as R[]
+  return result
 }

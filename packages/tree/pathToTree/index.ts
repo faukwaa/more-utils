@@ -1,6 +1,7 @@
 /* eslint-disable jsdoc/check-param-names */
-import * as _ from 'lodash-es'
+import { cloneDeep, uniqueId } from 'lodash-es'
 import type { TreeNode, TreeOptions } from '../types'
+import { genFieldNames } from '../utils'
 
 /**
  * 扁平数据通过 Path 转为树形数据
@@ -18,63 +19,73 @@ import type { TreeNode, TreeOptions } from '../types'
  * @returns 树形数据
  */
 export function pathToTree<
-  T,
-  R = TreeNode<T>,
+T extends Record<string, any>,
 >(data: T[], {
   fieldNames = {},
   separator = '/',
-  hasEmptyChildren = false,
   isNameInPath = true,
-  cloneDeep = true,
-}: TreeOptions = {}): R[] {
-  const _fieldNames = {
-    id: fieldNames.id || 'id',
-    path: fieldNames.path || 'path',
-    name: fieldNames.name || 'name',
-    children: fieldNames.children || 'children',
-  }
-  const result: R[] = []
-  // 以 path[0] 为 key 的 map
-  data.forEach((d) => {
-    const item = cloneDeep ? _.cloneDeep(d) : d
-    let path = _.get(item, _fieldNames.path) as string
-    if (path && path.startsWith(separator))
-      path = path.slice(1)
+  deep = true,
+  extendAttrs = true,
+}: Pick<TreeOptions, 'fieldNames' | 'separator' | 'isNameInPath' | 'deep' | 'extendAttrs'> = {}): TreeNode<T>[] {
+  const _fieldNames = genFieldNames(fieldNames)
+  const { id, name, children, parentIds, parent, depth, path, isLeaf } = _fieldNames
+  const tree: TreeNode<T>[] = []
+  const _data = deep ? cloneDeep(data) : [...data]
 
-    if (path) {
-      const pathArr = path.split(separator)
-      // 如果 nameKey 不在 path 中，则将 nameKey 的值 push 进去
-      if (!isNameInPath)
-        pathArr.push(_.get(item, _fieldNames.name))
+  // 遍历每条路径
+  _data.forEach((item: any) => {
+    const pathValue = item[path] // 获取节点路径
+    const normalizedPath = pathValue.startsWith(separator) ? pathValue.slice(1) : pathValue // 去除开头的分隔符
+    const paths: string[] = normalizedPath.split(separator) // 拆分路径为节点名称
+    let currentLevel = tree
+    let parentNode: TreeNode<T> | null = null
+    const parentIdsArray: string[] = []
 
-      // _.result 默认为 result，此处为浅拷贝，将 result 的引用赋值给 _.result，push 也会改变 result
-      let _result = result
-      pathArr.forEach((p: string, index: number) => {
-        // 从当前的 result 中查找此路径的节点是否存在(_.result 是 result 的引用，所以这里查找的就是 result)
-        let obj = _result.find(t => _.get(t, _fieldNames.name) === p) as object
+    // 遍历路径中的每个节点名称
+    paths.forEach((nodePath, index) => {
+      let existingNode: any = currentLevel.find(node => node[path] === nodePath)
 
-        // 若不存在则根据该路径创建一个节点
-        if (!obj) {
-          obj = (p === pathArr[pathArr.length - 1] ? { ...item } : {}) as object
-          if (!_.has(obj, _fieldNames.id))
-            _.set(obj, _fieldNames.id, pathArr.slice(0, index + 1).join(separator))
+      // 如果不存在，则创建一个新的节点
+      if (!existingNode) {
+        existingNode = {
+          [name]: nodePath,
+          [children]: [],
+        } as TreeNode<T>
 
-          _.set(obj, _fieldNames.name, p)
-          _.set(obj, _fieldNames.children, [])
+        // 如果 extendAttrs 为 true，扩展节点属性
+        if (extendAttrs) {
+          existingNode[id] = existingNode[id] || uniqueId()
 
-          _result.push(obj as R)
-          // 若当前被增节点是叶子节点，则裁剪该节点子节点属性
-          if (p === pathArr[pathArr.length - 1] && !hasEmptyChildren)
-            _.unset(obj, _fieldNames.children)
+          // 创建父节点的副本并去掉 children 属性
+          const parentNodeWithoutChildren = parentNode ? { ...parentNode } : null
+          if (parentNodeWithoutChildren)
+            delete parentNodeWithoutChildren[children] // 删除 children 属性
+
+          existingNode[parent] = parentNodeWithoutChildren // 添加父节点引用（无 children）
+
+          existingNode[parentIds] = [...parentIdsArray]
+          existingNode[depth] = index
+          existingNode[path] = `${separator}${paths.slice(0, index + 1).join(separator)}`
+          existingNode[isLeaf] = index === paths.length - 1 // 使用 isLeaf 字段定义叶子节点
         }
-        // 若已存在则将 _.result 指向该节点的 children 的引用，
-        // 去找下一层路径在该节点的 children 中是否存在，存在则继续引用下一层的 children
-        _result = _.get(obj, _fieldNames.children, [])
-      })
-    }
-    else {
-      result.push(item as unknown as R)
-    }
+
+        currentLevel.push(existingNode)
+      }
+
+      // 如果是路径中的最后一个部分，且 isNameInPath 为 true，复制或直接合并 item
+      if (index === paths.length - 1 && isNameInPath) {
+        const { [name]: _, ...rest } = item // 保留 item 中除 name 以外的其他属性
+        Object.assign(existingNode, rest) // 合并其他属性
+        if (extendAttrs)
+          existingNode[isLeaf] = true // 使用 isLeaf 字段定义叶子节点
+      }
+
+      // 设置下一层级为子节点层级，继续下一层
+      parentNode = existingNode
+      parentIdsArray.push(existingNode[id] || '')
+      currentLevel = existingNode[children] as TreeNode<T>[]
+    })
   })
-  return result
+
+  return tree
 }

@@ -1,6 +1,5 @@
 /* eslint-disable jsdoc/check-param-names */
-import { treeToFlat } from '../treeToFlat'
-import type { TreeCallBack, TreeFlatNode, TreeNode, TreeOptions } from '../types'
+import type { TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
 /**
@@ -20,22 +19,29 @@ import { genFieldNames } from '../utils'
  * @param param3.fieldNames.isLeaf 是否为叶子节点字段名，默认为 'isLeaf'
  * @returns 查找到的节点
  */
-export function findTree<
-  T,
-  R = TreeNode<T> | TreeFlatNode<T>,
->(
+export function findTree<T extends Record<string, any>>(
   tree: T[],
-  callback: TreeCallBack<TreeFlatNode<T>>,
-  {
-    fieldNames = {},
-  }: TreeOptions = {},
-): R | undefined {
+  callback: (node: T) => boolean,
+  { fieldNames = {} }: Pick<TreeOptions, 'fieldNames'> = {},
+): T | null {
   const _fieldNames = genFieldNames(fieldNames)
+  const { children } = _fieldNames
 
-  const flatNodes = treeToFlat(tree, {
-    fieldNames: _fieldNames,
-    hasChildren: true,
-  })
+  // 使用栈存储节点
+  const stack: T[] = [...tree]
 
-  return flatNodes.find(item => callback(item)) as R | undefined
+  // 迭代遍历
+  while (stack.length > 0) {
+    const node = stack.pop()!
+
+    // 检查当前节点是否符合条件
+    if (callback(node))
+      return node
+
+    // 如果有子节点，将子节点推入栈
+    if (node[children] && node[children].length > 0)
+      stack.push(...node[children])
+  }
+
+  return null // 未找到符合条件的节点
 }

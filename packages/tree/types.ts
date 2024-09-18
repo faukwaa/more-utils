@@ -9,13 +9,12 @@ export interface TreeOptions {
     depth?: string
     path?: string
     isLeaf?: string
+    count?: string
   }
-  hasEmptyChildren?: boolean
-  cloneDeep?: boolean
+  deep?: boolean
   separator?: string
   isNameInPath?: boolean
   hasChildren?: boolean
-  flat?: boolean
   /**
    * 用于 filterTree，是否基于子元素来过滤，
    * 基于子节点过滤为只要树形上的某条线上有任意节点符合条件，就需要保留树形一整条线的节点
@@ -25,10 +24,14 @@ export interface TreeOptions {
   /**
    * 用于 flatToTree,treeToFlat 确定生成的树形是否需要 parentIds,parent,path,depth,isLeaf 等树形树形
    */
-  hasTreeAttrs?: boolean
+  extendAttrs?: boolean
+  /**
+   * 用于汇总树形数据的字段
+   */
+  summaryFields?: string[]
 }
 
-export type TreeNode<T> = {
+export type TreeNode<T = object> = {
   id?: string | number
   parentId?: string | number | null
   parentIds?: (string | number)[] | null
@@ -50,6 +53,3 @@ export type TreeFlatNode<T> = {
   isLeaf?: boolean
   [key: string]: any
 } & T
-
-export type TreeCallBack<T extends Record<string, any>, R = T> =
-  (item: T) => TreeNode<R> | boolean | void
