@@ -1,7 +1,8 @@
 /* eslint-disable jsdoc/check-param-names */
-import { cloneDeep } from 'lodash-es'
 import type { TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
+import { treeToFlat } from '../treeToFlat'
+import { flatToTree } from '../flatToTree'
 
 /**
  * 过滤树形数据
@@ -25,34 +26,52 @@ import { genFieldNames } from '../utils'
 export function filterTree<T extends Record<string, any>>(
   tree: T[],
   callback: (node: T) => boolean,
-  { fieldNames = {}, deep = true, basedOnChildren = true, hasChildren = false }:
-  Pick<TreeOptions, 'fieldNames' | 'deep' | 'basedOnChildren' | 'hasChildren'> = {},
+  { fieldNames = {}, deep = true, basedOnChildren = true, hasChildren = false, flat = false, extendAttrs = false }:
+  Pick<TreeOptions, 'fieldNames' | 'deep' | 'basedOnChildren' | 'hasChildren' | 'flat' | 'extendAttrs'> = {},
 ): T[] {
   const _fieldNames = genFieldNames(fieldNames)
-  const { children: childrenKey } = _fieldNames
-  const result: T[] = []
-  const clonedTree = deep ? cloneDeep(tree) : [...tree]
-  const stack = clonedTree.map(node => ({ node, parent: null as T | null }))
+  const { id, parentIds, parent, depth, path, isLeaf } = _fieldNames
+  const flatData = treeToFlat(tree, { fieldNames, deep })
+  const filterFlatData = flatData.filter(callback)
 
-  while (stack.length > 0) {
-    const { node, parent } = stack.pop()!
-    const currentNode: T = { ...node, children: [] } as T
-    let children = node[childrenKey] || []
-    if (!hasChildren)
-      children = []
+  const filterIds = new Set<string | number>(filterFlatData.map(node => node[id]))
+  // 过滤后的父级 id 集合,basedOnChildren 为 true 时有效
+  const filterParentIds = new Set<string | number>()
+  // 过滤后的子级 id 集合,hasChildren 为 true 时有效
+  const filterChildrenIds = new Set<string | number>()
 
-    const isValid = callback(node)
-    if (basedOnChildren) {
-      if (children.length > 0 || isValid)
-        parent ? parent[childrenKey].push(currentNode) : result.push(currentNode)
+  flatData.forEach((node) => {
+    if (filterIds.has(node[id])) {
+      if (basedOnChildren) {
+        node[parentIds].forEach((parentId: string | number) => {
+          filterParentIds.add(parentId)
+        })
+      }
     }
-    else {
-      if (isValid)
-        parent ? parent[childrenKey].push(currentNode) : result.push(currentNode)
-    }
-    for (const child of children)
-      stack.push({ node: child, parent: currentNode })
-  }
 
-  return result
+    if (hasChildren) {
+      if (node[parentIds].filter((item: string | number) => filterIds.has(item)).length > 0)
+        filterChildrenIds.add(node[id])
+    }
+  })
+
+  const needNodes = flatData.filter(node => filterIds.has(node[id]) || filterParentIds.has(node[id]) || filterChildrenIds.has(node[id])).map((node) => {
+    if (!extendAttrs) {
+      const {
+        [parentIds]: _parentIds,
+        [parent]: _parent,
+        [depth]: _depth,
+        [path]: _path,
+        [isLeaf]: _isLeaf,
+        ...rest
+      } = node
+      return rest as T
+    }
+    return node
+  })
+
+  if (flat)
+    return needNodes
+
+  return flatToTree(needNodes, { fieldNames, deep: false, extendAttrs: false })
 }

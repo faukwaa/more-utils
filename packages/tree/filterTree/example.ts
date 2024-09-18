@@ -29,7 +29,7 @@ const treeData = [
   },
 ]
 executeWithProgressBar(() => new Promise<void>((resolve) => {
-  const _tree = filterTree(treeData as any, item => item.amount > 10, { hasChildren: true })
+  const _tree = filterTree(treeData as any, item => item.amount > 20, { hasChildren: false })
   // eslint-disable-next-line no-console
   console.log(JSON.stringify(_tree, null, 2))
   resolve()
