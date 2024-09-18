@@ -21,7 +21,7 @@ export function flatToTree<T>(data: T[], {
   extendAttrs = true,
 }: Pick<TreeOptions, 'fieldNames' | 'deep' | 'extendAttrs'> = {}): TreeNode<T>[] {
   const _fieldNames = genFieldNames(fieldNames)
-  const { id, name, parentId, children, parentIds, parent, depth, path } = _fieldNames
+  const { id, name, parentId, parentIds, parent, depth, path, isLeaf, children } = _fieldNames
   const idMap: Record<string, TreeNode<T>> = {}
   const result: TreeNode<T>[] = []
   const _data = deep ? cloneDeep(data) : [...data]
@@ -33,6 +33,7 @@ export function flatToTree<T>(data: T[], {
       node[parent] = null
       node[depth] = 0
       node[path] = ''
+      node[isLeaf] = false
     }
     const { [children]: _children, ...nodeWithoutChildren } = node
     const existNode = idMap[node[id]]
@@ -47,6 +48,7 @@ export function flatToTree<T>(data: T[], {
       if (extendAttrs) {
         node[depth] = 0
         node[path] = `/${node[name]}`
+        node[isLeaf] = !node[children].length
       }
     }
     else {
@@ -69,6 +71,7 @@ export function flatToTree<T>(data: T[], {
         node[parentIds] = parentNode[parentIds].concat(parentNode[id])
         node[depth] = parentNode[depth] + 1
         node[path] = `${parentNode[path]}/${node[name]}`
+        node[isLeaf] = !node[children].length
       }
       _children.push(node)
     }
