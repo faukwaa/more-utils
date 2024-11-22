@@ -27,7 +27,7 @@ export function findIndexTree<T extends Record<string, any>>(
   const _fieldNames = genFieldNames(fieldNames)
   const { children } = _fieldNames
 
-  const stack: { node: T, path: number[] }[] = tree.map((node, index) => ({ node, path: [index] }))
+  const stack: { node: T, path: number[] }[] = tree.map((node, index) => ({ node, path: [index] })).reverse()
 
   while (stack.length > 0) {
     const { node, path } = stack.pop()!
@@ -38,7 +38,7 @@ export function findIndexTree<T extends Record<string, any>>(
 
     // 如果有子节点，将子节点压入栈，并记录路径
     if (node[children] && node[children].length > 0) {
-      for (let i = 0; i < node[children].length; i++)
+      for (let i = node[children].length - 1; i >= 0; i--)
         stack.push({ node: node[children][i], path: path.concat(i) })
     }
   }

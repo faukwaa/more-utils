@@ -16,6 +16,11 @@ const treeData = [
       { id: 3, name: 'C', amount: 30 },
     ],
   },
+  {
+    id: 2,
+    name: 'E',
+    amount: 20,
+  },
 ]
 executeWithProgressBar(() => new Promise<void>((resolve) => {
   const node = findTree(treeData as any, item => item.amount === 20)

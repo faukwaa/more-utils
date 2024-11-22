@@ -16,9 +16,10 @@ const treeData = [
       { id: 3, name: 'C', amount: 30 },
     ],
   },
+  { id: 5, name: 'E', amount: 20 },
 ]
 executeWithProgressBar(() => new Promise<void>((resolve) => {
-  const index = findIndexTree(treeData as any, item => item.name === 'D')
+  const index = findIndexTree(treeData as any, item => item.amount === 20)
   // eslint-disable-next-line no-console
   console.log(index)
   resolve()
