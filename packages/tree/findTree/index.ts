@@ -28,7 +28,7 @@ export function findTree<T extends Record<string, any>>(
   const { children } = _fieldNames
 
   // 使用栈存储节点
-  const stack: T[] = [...tree]
+  const stack: T[] = [...tree.reverse()]
 
   // 迭代遍历
   while (stack.length > 0) {
