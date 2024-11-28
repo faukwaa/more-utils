@@ -1,4 +1,5 @@
 /* eslint-disable jsdoc/check-param-names */
+import { cloneDeep } from 'lodash-es'
 import type { TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
@@ -17,17 +18,19 @@ import { genFieldNames } from '../utils'
  * @param param3.fieldNames.depth 深度字段名，默认为 'depth'
  * @param param3.fieldNames.path 路径字段名，默认为 'path'
  * @param param3.fieldNames.isLeaf 是否为叶子节点字段名，默认为 'isLeaf'
+ * @param param2.deep 是否进行深拷贝，默认为 true
  * @returns node 的 index
  */
 export function findIndexTree<T extends Record<string, any>>(
   tree: T[],
   callback: (node: T) => boolean,
-  { fieldNames = {} }: Pick<TreeOptions, 'fieldNames'> = {},
+  { fieldNames = {}, deep = true }: Pick<TreeOptions, 'fieldNames' | 'deep'> = {},
 ): number[] | null {
   const _fieldNames = genFieldNames(fieldNames)
   const { children } = _fieldNames
+  const _tree = deep ? cloneDeep(tree) : tree
 
-  const stack: { node: T, path: number[] }[] = tree.map((node, index) => ({ node, path: [index] })).reverse()
+  const stack: { node: T, path: number[] }[] = _tree.map((node, index) => ({ node, path: [index] })).reverse()
 
   while (stack.length > 0) {
     const { node, path } = stack.pop()!

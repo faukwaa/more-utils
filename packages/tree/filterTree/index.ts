@@ -19,6 +19,8 @@ import { flatToTree } from '../flatToTree'
  * @param param2.fieldNames.depth 深度字段名，默认为 'depth'
  * @param param2.fieldNames.path 路径字段名，默认为 'path'
  * @param param2.fieldNames.isLeaf 是否为叶子节点字段名，默认为 'isLeaf'
+ * @param param2.deep 是否进行深拷贝，默认为 true
+ * @param param2.basedOnChildren 是否基于子级返回结果，即子级满足条件则整一条线都保留，默认为 true
  * @param param2.flat 是否扁平化，默认为 false
  * @param param2.hasChildren 是否为命中的节点保留 children 字段，默认为 false
  * @returns 过滤后的树形数据
