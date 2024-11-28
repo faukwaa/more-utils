@@ -30,7 +30,7 @@ export function findIndexTree<T extends Record<string, any>>(
   const { children } = _fieldNames
   const _tree = deep ? cloneDeep(tree) : tree
 
-  const stack: { node: T, path: number[] }[] = _tree.map((node, index) => ({ node, path: [index] })).reverse()
+  const stack: { node: T, path: number[] }[] = _tree.map((node: T, index: number) => ({ node, path: [index] })).reverse()
 
   while (stack.length > 0) {
     const { node, path } = stack.pop()!
