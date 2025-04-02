@@ -11,69 +11,103 @@ import { genFieldNames } from '../utils'
  * @param param1.fieldNames.id id 字段名，默认为 'id'
  * @param param1.fieldNames.parentId 父级 id 字段名，默认为 'parentId'
  * @param param1.fieldNames.children 子级字段名，默认为 'children'
- * @param param1.cloneDeep 是否深拷贝，默认为 true
- * @param param1.extendAttrs 是否附加扩展树形，默认为 true
+ * @param param1.deep 是否深拷贝，默认为 true
+ * @param param1.extendAttrs 是否附加扩展属性，默认为 true
  * @returns 树形数据
  */
 export function flatToTree<T>(data: T[], {
   fieldNames = {},
   deep = false,
+  hasEmptyChildren = false,
+  isNameInPath = true,
   extendAttrs = true,
-}: Pick<TreeOptions, 'fieldNames' | 'deep' | 'extendAttrs'> = {}): TreeNode<T>[] {
+}: Pick<TreeOptions, 'fieldNames' | 'deep' | 'hasEmptyChildren' | 'isNameInPath' | 'extendAttrs'> = {}): TreeNode<T>[] {
   const _fieldNames = genFieldNames(fieldNames)
   const { id, name, parentId, parentIds, parent, depth, path, isLeaf, children } = _fieldNames
   const idMap: Record<string, TreeNode<T>> = {}
   const result: TreeNode<T>[] = []
   const _data = deep ? cloneDeep(data) : [...data]
-  // 遍历扁平数组，浅拷贝节点，并构建映射表
-  _data.forEach((node: any) => {
-    node[children] = []
-    if (extendAttrs) {
-      node[parentIds] = []
-      node[parent] = null
-      node[depth] = 0
-      node[path] = ''
-      node[isLeaf] = false
-    }
-    const { [children]: _children, ...nodeWithoutChildren } = node
-    const existNode = idMap[node[id]]
-    if (existNode)
-      idMap[node[id]] = Object.assign(existNode, nodeWithoutChildren)
-    else
-      idMap[node[id]] = node
 
-    if (node[parentId] === null) {
-      // 根节点直接添加到结果
-      result.push(node)
-      if (extendAttrs) {
-        node[depth] = 0
-        node[path] = `/${node[name]}`
-        node[isLeaf] = !node[children].length
+  // 缓存机制：存储已计算的深度和父级ID列表
+  const depthCache: Record<string, number> = {}
+  const parentIdsCache: Record<string, string[]> = {}
+
+  // 辅助函数：收集所有父级 ID
+  const collectParentIds = (nodeId: string): string[] => {
+    if (!parentIdsCache[nodeId]) {
+      const node = idMap[nodeId]
+      if (!node || !node[parentId])
+        parentIdsCache[nodeId] = []
+      else
+        parentIdsCache[nodeId] = [node[parentId], ...collectParentIds(node[parentId])]
+    }
+    return parentIdsCache[nodeId]
+  }
+
+  // 辅助函数：计算节点深度
+  const calculateDepth = (nodeId: string): number => {
+    if (!depthCache[nodeId]) {
+      const node = idMap[nodeId]
+      if (!node || !node[parentId])
+        depthCache[nodeId] = 0
+      else
+        depthCache[nodeId] = calculateDepth(node[parentId]) + 1
+    }
+    return depthCache[nodeId]
+  }
+
+  // 第一次遍历：建立基本映射关系
+  _data.forEach((node: any) => {
+    if (!node[id])
+      throw new Error(`Node missing required field 'id': ${JSON.stringify(node)}`)
+    if (hasEmptyChildren)
+      node[children] = []
+    idMap[node[id]] = node
+  })
+
+  // 第二次遍历：构建树形结构并设置属性
+  _data.forEach((node: any) => {
+    if (extendAttrs) {
+      try {
+        // 计算深度
+        node[depth] = calculateDepth(node[id])
+
+        // 收集父级IDs
+        node[parentIds] = collectParentIds(node[id])
+
+        // 构建路径
+        const pathParts: string[] = []
+        let current = node
+        while (current) {
+          pathParts.push(isNameInPath ? current[name] : current[name])
+          current = idMap[current[parentId]]
+        }
+        node[path] = `/${pathParts.reverse().join('/')}`
+
+        // 设置叶子节点标志
+        node[isLeaf] = true
       }
+      catch (error) {
+        console.error(`Error processing node with id=${node[id]}:`, error)
+      }
+    }
+
+    if (!node[parentId]) {
+      result.push(node)
     }
     else {
-      let parentNode: any = idMap[node[parentId]]
-      if (!parentNode) {
-        parentNode = { id: node[parentId], children: [] }
-        if (extendAttrs) {
-          parentNode[parentIds] = []
-          parentNode[parent] = null
-          parentNode[depth] = 0
-          parentNode[path] = ''
-        }
-        idMap[node[parentId]] = parentNode
-      }
+      const parentNode = idMap[node[parentId]] as any
+      if (parentNode) {
+        if (!parentNode[children])
+          parentNode[children] = []
+        parentNode[isLeaf] = false
 
-      const { [children]: _children, ...parentWithoutChildren } = parentNode
+        const { [children]: _, ...parentWithoutChildren } = parentNode
+        if (extendAttrs)
+          node[parent] = parentWithoutChildren as TreeNode<T>
 
-      if (extendAttrs) {
-        node[parent] = parentWithoutChildren as TreeNode<T>
-        node[parentIds] = parentNode[parentIds].concat(parentNode[id])
-        node[depth] = parentNode[depth] + 1
-        node[path] = `${parentNode[path]}/${node[name]}`
-        node[isLeaf] = !node[children].length
+        parentNode[children].push(node)
       }
-      _children.push(node)
     }
   })
 

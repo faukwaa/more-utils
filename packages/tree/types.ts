@@ -15,6 +15,7 @@ export interface TreeOptions {
   separator?: string
   isNameInPath?: boolean
   hasChildren?: boolean
+  hasEmptyChildren?: boolean
   /**
    * 用于 filterTree，是否基于子元素来过滤，
    * 基于子节点过滤为只要树形上的某条线上有任意节点符合条件，就需要保留树形一整条线的节点
