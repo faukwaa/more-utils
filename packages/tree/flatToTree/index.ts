@@ -18,7 +18,7 @@ import { genFieldNames } from '../utils'
 export function flatToTree<T>(data: T[], {
   fieldNames = {},
   deep = false,
-  hasEmptyChildren = false,
+  hasEmptyChildren = true,
   isNameInPath = true,
   extendAttrs = true,
 }: Pick<TreeOptions, 'fieldNames' | 'deep' | 'hasEmptyChildren' | 'isNameInPath' | 'extendAttrs'> = {}): TreeNode<T>[] {
