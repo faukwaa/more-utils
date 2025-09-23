@@ -2,7 +2,7 @@ import { cloneDeep } from 'lodash-es'
 import type { TreeNode, TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
-export function countTree<T extends Record<string, any>>(
+export function countTree<T = any>(
   tree: TreeNode<T>[],
   callback: (node: TreeNode<T>) => boolean,
   { fieldNames = {}, deep = false }: Pick<TreeOptions, 'fieldNames' | 'deep'> = {},

@@ -1,5 +1,5 @@
 /* eslint-disable jsdoc/check-param-names */
-import type { TreeOptions } from '../types'
+import type { TreeNode, TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 import { treeToFlat } from '../treeToFlat'
 import { flatToTree } from '../flatToTree'
@@ -25,7 +25,7 @@ import { flatToTree } from '../flatToTree'
  * @param param2.hasChildren 是否为命中的节点保留 children 字段，默认为 false
  * @returns 过滤后的树形数据
  */
-export function filterTree<T extends Record<string, any>>(
+export function filterTree<T = any>(
   tree: T[],
   callback: (node: T) => boolean,
   { fieldNames = {}, deep = true, basedOnChildren = true, hasChildren = false, flat = false, extendAttrs = false }:
@@ -33,7 +33,7 @@ export function filterTree<T extends Record<string, any>>(
 ): T[] {
   const _fieldNames = genFieldNames(fieldNames)
   const { id, parentIds, parent, depth, path, isLeaf } = _fieldNames
-  const flatData = treeToFlat(tree, { fieldNames, deep })
+  const flatData = treeToFlat(tree as TreeNode<T>[], { fieldNames, deep })
   const filterFlatData = flatData.filter(callback)
 
   const filterIds = new Set<string | number>(filterFlatData.map(node => node[id]))

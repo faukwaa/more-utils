@@ -22,7 +22,7 @@ import { genFieldNames } from '../utils'
  * @param param1.extendAttrs 是否附加扩展树形数据，默认为 true
  * @returns 扁平数据
  */
-export function treeToFlat<T, R = TreeFlatNode<T>>(
+export function treeToFlat<T = any, R = TreeFlatNode<T>>(
   tree: TreeNode<T>[],
   { fieldNames = {}, hasChildren = false, deep = false, extendAttrs = true }: Pick<TreeOptions, 'fieldNames' | 'hasChildren' | 'deep' | 'extendAttrs'> = {},
 ): R[] {

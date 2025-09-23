@@ -15,7 +15,7 @@ import { genFieldNames } from '../utils'
  * @param param1.nameKey 节点名称的 key，默认为 'name'
  * @param param1.idKey 节点 id 的 key，默认为 'id'
  */
-export function genTreeAttrs<T extends Record<string, any>>(
+export function genTreeAttrs<T = any>(
   tree: T[],
   { fieldNames = {} }: Pick<TreeOptions, 'fieldNames'> = {},
 ): void {
@@ -28,7 +28,7 @@ export function genTreeAttrs<T extends Record<string, any>>(
     parent: null,
     parentIds: [],
     depth: 0,
-    path: `/${node[name]}`,
+    path: `/${(node as Record<string, any>)[name]}`,
   }))
 
   // 迭代遍历

@@ -21,7 +21,7 @@ import { genFieldNames } from '../utils'
  * @param param2.deep 是否进行深拷贝，默认为 true
  * @returns 查找到的节点
  */
-export function findTree<T extends Record<string, any>>(
+export function findTree<T = any>(
   tree: T[],
   callback: (node: T) => boolean,
   { fieldNames = {}, deep = true }: Pick<TreeOptions, 'fieldNames' | 'deep'> = {},
@@ -41,8 +41,8 @@ export function findTree<T extends Record<string, any>>(
       return node
 
     // 如果有子节点，将子节点推入栈
-    if (node[children] && node[children].length > 0)
-      stack.push(...(node[children].reverse()))
+    if ((node as Record<string, any>)[children] && (node as Record<string, any>)[children].length > 0)
+      stack.push(...((node as Record<string, any>)[children].reverse()))
   }
 
   return null // 未找到符合条件的节点

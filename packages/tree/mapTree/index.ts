@@ -22,7 +22,7 @@ import { genFieldNames } from '../utils'
  * @param param2.hasEmptyChildren 是否为每个节点添加一个空的 children 字段，默认为 false
  * @returns 遍历后的树形数据
  */
-export function mapTree<T extends Record<string, any>, R = any>(
+export function mapTree<T = any, R = any>(
   tree: T[],
   callback: (node: T) => R,
   { fieldNames = {}, deep = true }: Pick<TreeOptions, 'fieldNames' | 'deep'> = {},
@@ -50,7 +50,7 @@ export function mapTree<T extends Record<string, any>, R = any>(
       newTree.push(newNode) // 根节点放入新树中
 
     // 如果当前节点有子节点，继续处理子节点
-    const nodeChildren = node[children]
+    const nodeChildren = (node as Record<string, any>)[children]
     if (nodeChildren && nodeChildren.length > 0) {
       (newNode as any)[children] = []
 

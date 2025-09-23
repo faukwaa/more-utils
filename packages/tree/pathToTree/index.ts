@@ -18,9 +18,7 @@ import { genFieldNames } from '../utils'
  * @param param1.cloneDeep 是否深拷贝，默认为 true
  * @returns 树形数据
  */
-export function pathToTree<
-T extends Record<string, any>,
->(data: T[], {
+export function pathToTree<T = any>(data: T[], {
   fieldNames = {},
   separator = '/',
   isNameInPath = true,

@@ -21,7 +21,7 @@ import { genFieldNames } from '../utils'
  * @param param2.deep 是否进行深拷贝，默认为 true
  * @returns node 的 index
  */
-export function findIndexTree<T extends Record<string, any>>(
+export function findIndexTree<T = any>(
   tree: T[],
   callback: (node: T) => boolean,
   { fieldNames = {}, deep = true }: Pick<TreeOptions, 'fieldNames' | 'deep'> = {},
@@ -40,9 +40,9 @@ export function findIndexTree<T extends Record<string, any>>(
       return path
 
     // 如果有子节点，将子节点压入栈，并记录路径
-    if (node[children] && node[children].length > 0) {
-      for (let i = node[children].length - 1; i >= 0; i--)
-        stack.push({ node: node[children][i], path: path.concat(i) })
+    if ((node as Record<string, any>)[children] && (node as Record<string, any>)[children].length > 0) {
+      for (let i = (node as Record<string, any>)[children].length - 1; i >= 0; i--)
+        stack.push({ node: (node as Record<string, any>)[children][i], path: path.concat(i) })
     }
   }
 

@@ -21,7 +21,7 @@ import { genFieldNames } from '../utils'
  * @param param3.fieldNames.isLeaf 是否为叶子节点字段名，默认为 'isLeaf'
  * @returns 替换后的树形数据
  */
-export function replaceTree<T extends Record<string, any>, R = TreeNode<T>>(
+export function replaceTree<T = any, R = TreeNode<T>>(
   tree: T[],
   newNode: T,
   callback: (node: T) => boolean,
@@ -39,24 +39,25 @@ export function replaceTree<T extends Record<string, any>, R = TreeNode<T>>(
     if (callback(currentNode)) {
       const parent = findParentNode(resultTree, currentNode, { fieldNames })
       if (parent) {
-        const index = parent[children].findIndex((node: T) => node[id] === currentNode[id])
-        parent[children][index] = {
+        const index = (parent as Record<string, any>)[children]
+          .findIndex((node: T) => (node as Record<string, any>)[id] === (currentNode as Record<string, any>)[id])
+        ;(parent as Record<string, any>)[children][index] = {
           ...newNode,
-          [children]: currentNode[children] || [], // 保留原有的子节点（如有）
+          [children]: (currentNode as Record<string, any>)[children] || [], // 保留原有的子节点（如有）
         }
       }
     }
 
     // 如果存在子节点，将子节点加入栈
-    if (currentNode[children] && currentNode[children].length > 0)
-      stack.push(...currentNode[children])
+    if ((currentNode as Record<string, any>)[children] && (currentNode as Record<string, any>)[children].length > 0)
+      stack.push(...(currentNode as Record<string, any>)[children])
   }
 
   return resultTree
 }
 
 // 辅助函数：查找父节点
-function findParentNode<T extends Record<string, any>>(
+function findParentNode<T = any>(
   tree: T[],
   targetNode: T,
   { fieldNames = {} }: TreeOptions = {},
@@ -67,11 +68,16 @@ function findParentNode<T extends Record<string, any>>(
   while (stack.length > 0) {
     const node = stack.pop() as T
 
-    if (node[children] && node[children].some((child: T) => child[id] === targetNode[id]))
+    if (
+      (node as Record<string, any>)[children]
+      && (node as Record<string, any>)[children].some(
+        (child: T) => (child as Record<string, any>)[id] === (targetNode as Record<string, any>)[id],
+      )
+    )
       return node // 找到父节点
 
-    if (node[children] && node[children].length > 0)
-      stack.push(...node[children])
+    if ((node as Record<string, any>)[children] && (node as Record<string, any>)[children].length > 0)
+      stack.push(...(node as Record<string, any>)[children])
   }
 
   return null

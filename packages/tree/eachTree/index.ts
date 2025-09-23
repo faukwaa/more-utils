@@ -18,7 +18,7 @@ import { genFieldNames } from '../utils'
  * @param param2.fieldNames.path 路径字段名，默认为 'path'
  * @param param2.fieldNames.isLeaf 是否为叶子节点字段名，默认为 'isLeaf'
  */
-export function eachTree<T extends Record<string, any>>(
+export function eachTree<T = any>(
   tree: T[],
   callback: (node: T, index: number, parent: T | null) => void,
   { fieldNames = {} }: Pick<TreeOptions, 'fieldNames'> = {},
@@ -41,9 +41,9 @@ export function eachTree<T extends Record<string, any>>(
     callback(node, index, parent)
 
     // 如果有子节点，将子节点推入栈
-    if (node[children] && node[children].length > 0) {
-      for (let i = node[children].length - 1; i >= 0; i--)
-        stack.push({ node: node[children][i], index: i, parent: node })
+    if ((node as Record<string, any>)[children] && (node as Record<string, any>)[children].length > 0) {
+      for (let i = (node as Record<string, any>)[children].length - 1; i >= 0; i--)
+        stack.push({ node: (node as Record<string, any>)[children][i], index: i, parent: node })
     }
   }
 }

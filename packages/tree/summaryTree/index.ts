@@ -2,7 +2,7 @@ import { cloneDeep } from 'lodash-es'
 import type { TreeNode, TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
-export function summaryTree<T>(
+export function summaryTree<T = any>(
   tree: TreeNode<T>[],
   {
     fieldNames = {},

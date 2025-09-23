@@ -15,7 +15,7 @@ import { genFieldNames } from '../utils'
  * @param param1.extendAttrs 是否附加扩展属性，默认为 true
  * @returns 树形数据
  */
-export function flatToTree<T>(data: T[], {
+export function flatToTree<T = any>(data: T[], {
   fieldNames = {},
   deep = false,
   hasEmptyChildren = true,
