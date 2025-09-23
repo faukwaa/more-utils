@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/check-param-names */
 import * as _ from 'lodash-es'
-import type { TreeNode, TreeOptions } from '../types'
+import type { TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
 /**
@@ -21,7 +21,7 @@ import { genFieldNames } from '../utils'
  * @param param3.fieldNames.isLeaf 是否为叶子节点字段名，默认为 'isLeaf'
  * @returns 替换后的树形数据
  */
-export function replaceTree<T = any, R = TreeNode<T>>(
+export function replaceTree<T = any, R = any>(
   tree: T[],
   newNode: T,
   callback: (node: T) => boolean,

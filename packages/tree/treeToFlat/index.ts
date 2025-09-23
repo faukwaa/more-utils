@@ -22,14 +22,14 @@ import { genFieldNames } from '../utils'
  * @param param1.extendAttrs 是否附加扩展树形数据，默认为 true
  * @returns 扁平数据
  */
-export function treeToFlat<T = any, R = TreeFlatNode<T>>(
-  tree: TreeNode<T>[],
+export function treeToFlat<T = any, R = any>(
+  tree: T[],
   { fieldNames = {}, hasChildren = false, deep = false, extendAttrs = true }: Pick<TreeOptions, 'fieldNames' | 'hasChildren' | 'deep' | 'extendAttrs'> = {},
-): R[] {
+): TreeFlatNode<R>[] {
   const _fieldNames = genFieldNames(fieldNames)
   const { id, name, parentId, parentIds, parent, depth, path, isLeaf, children } = _fieldNames
   const result: R[] = []
-  const stack: TreeNode<T>[] = deep ? cloneDeep(tree).reverse() : [...tree.reverse()] // 初始化栈，将树的根节点压入栈
+  const stack: TreeNode<T>[] = (deep ? cloneDeep(tree).reverse() : [...tree.reverse()]) as TreeNode<T>[] // 初始化栈，将树的根节点压入栈
   // 使用栈来进行非递归遍历
 
   while (stack.length > 0) {
@@ -76,5 +76,5 @@ export function treeToFlat<T = any, R = TreeFlatNode<T>>(
     result.push(node as R)
   }
 
-  return result
+  return result as TreeFlatNode<R>[]
 }

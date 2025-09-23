@@ -3,7 +3,7 @@ import type { TreeNode, TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
 export function summaryTree<T = any>(
-  tree: TreeNode<T>[],
+  tree: T[],
   {
     fieldNames = {},
     summaryFields = [],
@@ -76,5 +76,5 @@ export function summaryTree<T = any>(
     }
   }
 
-  return clonedTreeData
+  return clonedTreeData as TreeNode<T>[]
 }

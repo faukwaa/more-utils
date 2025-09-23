@@ -3,8 +3,8 @@ import type { TreeNode, TreeOptions } from '../types'
 import { genFieldNames } from '../utils'
 
 export function countTree<T = any>(
-  tree: TreeNode<T>[],
-  callback: (node: TreeNode<T>) => boolean,
+  tree: T[],
+  callback: (node: T) => boolean,
   { fieldNames = {}, deep = false }: Pick<TreeOptions, 'fieldNames' | 'deep'> = {},
 ) {
   const _fieldNames = genFieldNames(fieldNames)
