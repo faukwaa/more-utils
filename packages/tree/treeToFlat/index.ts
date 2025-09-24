@@ -69,7 +69,7 @@ export function treeToFlat<T = any, R = any>(
         delete node[children] // 扁平化，不需要 children 字段
 
       // 保持顺序，将子节点添加到栈的末尾
-      stack.push(..._children.reverse())
+      stack.push(deep ? cloneDeep(_children).reverse() : [..._children.reverse()])
     }
 
     // 添加到结果数组
